@@ -1,6 +1,6 @@
 {
-  "name": "copy-dynamodb-table",
-  "version": "2.2.1",
+  "name": "@zigzag-dev/copy-dynamodb-table",
+  "version": "2.2.2",
   "description": "Copy Dynamodb table to another in the same or different zone , It is 100% safe , and speed depends on your destination table user defined write provisioned throughput",
   "keywords": [
     "dynamodb",
@@ -12,11 +12,11 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/enGMzizo/copy-dynamodb-table"
+  "repository": "git@github.com:zigzag-dev/copy-dynamodb-table",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/@zigzag-dev"
   },
-  "author": "Ezzat @enGMzizo",
+  "author": "zigzag",
   "license": "ISC",
   "dependencies": {
     "aws-sdk": "^2.630.0",

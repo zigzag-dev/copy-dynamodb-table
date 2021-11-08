@@ -3,7 +3,7 @@ var AWS = require('aws-sdk')
 var validate = require('./validate')
 var readline = require('readline')
 
-function copy(values, fn) {
+function cp(values, fn){
 
   try {
     validate.config(values)
@@ -35,6 +35,42 @@ function copy(values, fn) {
     counter: values.counter || 0,
     retries: 0,
     data: {},
+    transform: values.transform,
+    log: values.log,
+    create: values.create,
+    schemaOnly: values.schemaOnly,
+    continuousBackups: values.continuousBackups
+  }
+
+  scanIgnore(options, function (err, ignoreData) {
+    console.log(err, ignoreData)
+    options.ignoreData = ignoreData;
+    copy(options,fn)
+  })
+}
+
+function copy(values, fn) {
+
+  var options = {
+    config: values.config,
+    source: {
+      tableName: values.source.tableName,
+      dynamoClient: values.source.dynamoClient || new AWS.DynamoDB.DocumentClient(values.source.config || values.config),
+      dynamodb: values.source.dynamodb || new AWS.DynamoDB(values.source.config || values.config),
+      active: values.source.active
+    },
+    destination: {
+      tableName: values.destination.tableName,
+      dynamoClient: values.destination.dynamoClient || new AWS.DynamoDB.DocumentClient(values.destination.config || values.config),
+      dynamodb: values.destination.dynamodb || new AWS.DynamoDB(values.destination.config || values.config),
+      active: values.destination.active,
+      createTableStr: 'Creating Destination Table '
+    },
+    key: values.key,
+    counter: values.counter || 0,
+    retries: 0,
+    data: {},
+    ignoreData: values.ignoreData,
     transform: values.transform,
     log: values.log,
     create: values.create,
@@ -268,8 +304,17 @@ function scan(options, fn) {
   }, fn)
 }
 
+function scanIgnore(options, fn){
+  options.destination.dynamoClient.scan({
+    TableName: options.destination.tableName,
+    FilterExpression: "#n0 = :v0",
+    ExpressionAttributeNames: {"#n0": "__COPY_IGNORE__"},
+    ExpressionAttributeValues: {":v0": true},
+  }, fn)
+}
+
 function mapItems(options, data) {
-  data.Items = data.Items.map(function (item, index) {
+  data.Items = data.Items.filter(item => !!!options.ignoreData.Items.find((iItem) => iItem.key === item.key)).map(function (item, index) {
     return {
       PutRequest: {
         Item: !!options.transform ? options.transform(item, index) : item
@@ -310,4 +355,4 @@ function putItems(options, fn) {
   })
 }
 
-module.exports.copy = copy
+module.exports.copy = cp
